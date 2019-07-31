@@ -2,19 +2,19 @@
     <v-menu offset-y v-model="showMenu">
         <template v-slot:activator="{ on }">
             <v-text-field
-                    :label="this.name"
+                    :label="name"
                     @keyup="queryForKeywords()"
-                    v-model="this.value"
+                    v-model="content"
             ></v-text-field>
         </template>
         <v-list>
-            <v-list-tile
+            <v-list-item
                     v-for="(item, index) in suggestKeywords"
                     :key="index"
-                    @click="setKeyword('company', 'editedItem.company', index)"
+                    @click="setKeyword(index)"
             >
-                <v-list-tile-title>{{ item }}</v-list-tile-title>
-            </v-list-tile>
+                <v-list-item-title>{{ item }}</v-list-item-title>
+            </v-list-item>
         </v-list>
     </v-menu>
 </template>
@@ -22,29 +22,32 @@
 <script>
     export default {
         name: "SearchText",
-        props: ['type', 'name', 'value'],
-        data: () => ({
-            showMenu: false,
-        }),
+        props: ['type', 'name', 'values'],
+        data: function () {
+            return {
+                content: this.values,
+                showMenu: false,
+                suggestKeywords: [],
+            }
+        },
         methods: {
             queryForKeywords: function () {
                 let that = this;
 
-                let value = eval('this.' + key);
-                if (typeof value == 'undefined') {
-                    value = '';
+                if (typeof this.content == 'undefined') {
+                    this.content = '';
                 }
-                this.$http.get(process.env.VUE_APP_API_URL + '/friends/suggest/' + type + '/' + encodeURI(value) + '?access-token=100-token')
+                this.$http.get('http://cs.cx/friends/suggest/' + this.type + '/' + encodeURI(this.content) + '?access-token=100-token')
                     .then(function (response) {
                         that.suggestKeywords = response.data;
                         // console.log(response);
 
                         if (typeof response.data !== 'undefined' && response.data.length > 0) {
                             that.$nextTick(() => {
-                                eval('that.showMenu.' + type + ' = true');
+                                that.showMenu = true;
                             });
                         } else {
-                            eval('that.showMenu.' + type + ' = false');
+                            that.showMenu = false;
                         }
                     })
                     .catch(function (error) {
@@ -52,8 +55,9 @@
                     });
             },
 
-            setKeyword: function (type, key, index) {
-                eval("this." + key + "='" + this.suggestKeywords[index] + "'");
+            setKeyword: function (index) {
+                this.content = this.suggestKeywords[index];
+                this.$emit('choose-value', this.type, this.content);
             },
         }
     }

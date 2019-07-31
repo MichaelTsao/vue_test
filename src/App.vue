@@ -26,9 +26,9 @@
 
     export default {
         name: 'App',
-  components: {
-      HelloWorld,
-  },
+        components: {
+            HelloWorld,
+        },
         data: () => ({
             //
         }),
